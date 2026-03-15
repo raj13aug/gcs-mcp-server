@@ -1,5 +1,5 @@
 variable "project_id" {
-  default = "mytesting-400910"
+  default = "vm-group-448915"
 }
 
 variable "region" {
