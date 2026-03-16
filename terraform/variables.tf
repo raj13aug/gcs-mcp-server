@@ -14,5 +14,5 @@ variable "cloudrun_ingress" {
 }
 
 variable "cloudrun_image" {
-  default = "raj13aug/my-app:1.0"
+  default = "raj13aug/my-app:4.0"
 }
