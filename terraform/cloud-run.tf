@@ -35,7 +35,8 @@ resource "google_cloud_run_v2_service" "cloud_run_teraform" {
     }
   }
   depends_on = [
-    google_project_service.cloud_run_api
+    google_project_service.cloud_run_api,
+    google_project_iam_member.gcs_admin_role
   ]
 }
 

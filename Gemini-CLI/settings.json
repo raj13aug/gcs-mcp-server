@@ -1,0 +1,19 @@
+{
+  "ide": {
+    "enabled": true,
+    "hasSeenNudge": true
+  },
+  "mcpServers": {
+    "sanket-cloudrun-server": {
+      "httpUrl": "https://gcs-mcp-server-$PROJECT_NUMBER.asia-south1.run.app/mcp",
+      "headers": {
+        "Authorization": "Bearer $ID_TOKEN"
+      }
+    }
+  },
+  "security": {
+    "auth": {
+      "selectedType": "oauth-personal"
+    }
+  }
+}
