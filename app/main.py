@@ -1,7 +1,7 @@
 # server.py
 import os
 import logging
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 from google.cloud import storage
 
 # Initialize FastMCP
