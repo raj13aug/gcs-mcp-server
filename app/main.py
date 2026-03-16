@@ -1,26 +1,34 @@
+import asyncio
+import logging
+import os
+from datetime import timedelta
+from typing import List, Dict, Any
+
 from fastmcp import FastMCP
 from google.cloud import storage
-
 from google.api_core import exceptions
-from datetime import timedelta
-import os
+
+# ---------------------------------------------------------
+# Initialize MCP
+# ---------------------------------------------------------
+logging.basicConfig(format="[%(levelname)s]: %(message)s", level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 mcp = FastMCP(name="MyEnhancedGCSMCPServer")
-storage_client = storage.Client()
 
 # ---------------------------------------------------------
-# 1️⃣ Simple Greeting
+# 1. Welcome to GCS MCP Operation Server
 # ---------------------------------------------------------
 @mcp.tool
-def greet(name: str) -> str:
-    """Returns a friendly greeting"""
-    return f"Hello {name}! It's a pleasure to connect from your enhanced MCP Server."
+def gcsmcp(name: str) -> str:
+    """Returns a Hello GCS MCP for a user"""
+    return f"Hello {name}! Welcome to GCS MCP Operation Server."
 
 # ---------------------------------------------------------
-# 2️⃣ List all GCS buckets
+# 2. List all GCS buckets
 # ---------------------------------------------------------
 @mcp.tool
-def list_gcs_buckets() -> list[str]:
+def list_gcs_buckets() -> List[str]:
     """Lists all GCS buckets in the project."""
     try:
         storage_client = storage.Client()
@@ -32,7 +40,7 @@ def list_gcs_buckets() -> list[str]:
         return [f"An unexpected error occurred: {e}"]
 
 # ---------------------------------------------------------
-# 3️⃣ Create a new bucket
+# 3. Create a new bucket
 # ---------------------------------------------------------
 @mcp.tool
 def create_bucket(bucket_name: str, location: str = "US") -> str:
@@ -42,38 +50,37 @@ def create_bucket(bucket_name: str, location: str = "US") -> str:
         bucket = storage_client.bucket(bucket_name)
         bucket.location = location
         storage_client.create_bucket(bucket)
-        return f"Bucket '{bucket_name}' created successfully in location '{location}'."
+        return f" Bucket '{bucket_name}' created successfully in '{location}'."
     except exceptions.Conflict:
-        return f"Error: Bucket '{bucket_name}' already exists."
+        return f" Error: Bucket '{bucket_name}' already exists."
     except exceptions.Forbidden as e:
-        return f"Error: Permission denied to create bucket. Details: {e}"
+        return f" Error: Permission denied to create bucket. Details: {e}"
     except Exception as e:
-        return f"An unexpected error occurred: {e}"
+        return f" Unexpected error: {e}"
 
 # ---------------------------------------------------------
-# 4️⃣ Delete a bucket
+# 4. Delete a bucket
 # ---------------------------------------------------------
 @mcp.tool
 def delete_bucket(bucket_name: str) -> str:
-    """Deletes a GCS bucket. The bucket must be empty unless force is used."""
+    """Deletes a GCS bucket."""
     try:
         storage_client = storage.Client()
         bucket = storage_client.bucket(bucket_name)
-        # force=True deletes the bucket even if it contains objects. Use with caution.
         bucket.delete(force=True)
-        return f"Bucket '{bucket_name}' deleted successfully."
+        return f" Bucket '{bucket_name}' deleted successfully."
     except exceptions.NotFound:
-        return f"Error: Bucket '{bucket_name}' not found."
+        return f" Error: Bucket '{bucket_name}' not found."
     except exceptions.Forbidden as e:
-        return f"Error: Permission denied to delete bucket '{bucket_name}'. Details: {e}"
+        return f" Error: Permission denied to delete bucket. Details: {e}"
     except Exception as e:
-        return f"An unexpected error occurred: {e}"
+        return f" Unexpected error: {e}"
 
 # ---------------------------------------------------------
-# 5️⃣ List objects in a bucket
+# 5. List objects in a bucket
 # ---------------------------------------------------------
 @mcp.tool
-def list_objects(bucket_name: str) -> list[str]:
+def list_objects(bucket_name: str) -> List[str]:
     """Lists all objects in a specified GCS bucket."""
     try:
         storage_client = storage.Client()
@@ -82,10 +89,10 @@ def list_objects(bucket_name: str) -> list[str]:
     except exceptions.NotFound:
         return [f"Error: Bucket '{bucket_name}' not found."]
     except Exception as e:
-        return [f"An unexpected error occurred: {e}"]
+        return [f"Unexpected error: {e}"]
 
 # ---------------------------------------------------------
-# 6️⃣ Upload file to a bucket
+# 6. Upload file to a bucket
 # ---------------------------------------------------------
 @mcp.tool
 def upload_blob(bucket_name: str, source_file_name: str, destination_blob_name: str) -> str:
@@ -95,35 +102,35 @@ def upload_blob(bucket_name: str, source_file_name: str, destination_blob_name: 
         bucket = storage_client.bucket(bucket_name)
         blob = bucket.blob(destination_blob_name)
         blob.upload_from_filename(source_file_name)
-        return f"File '{source_file_name}' uploaded to '{destination_blob_name}' in bucket '{bucket_name}'."
+        return f" File '{source_file_name}' uploaded to '{destination_blob_name}' in bucket '{bucket_name}'."
     except FileNotFoundError:
-        return f"Error: Local file '{source_file_name}' not found."
+        return f" Local file '{source_file_name}' not found."
     except exceptions.NotFound:
-        return f"Error: Bucket '{bucket_name}' not found."
+        return f"  Bucket '{bucket_name}' not found."
     except exceptions.Forbidden as e:
-        return f"Error: Permission denied. Details: {e}"
+        return f" Permission denied. Details: {e}"
     except Exception as e:
-        return f"An unexpected error occurred: {e}"
+        return f" Unexpected error: {e}"
 
 # ---------------------------------------------------------
-# 7️⃣ Download file from a bucket
+# 7. Download file from a bucket
 # ---------------------------------------------------------
 @mcp.tool
 def download_blob(bucket_name: str, blob_name: str, destination_file_name: str) -> str:
-    """Downloads a blob from a GCS bucket to a local file."""
+    """Downloads a blob from a GCS bucket."""
     try:
         storage_client = storage.Client()
         bucket = storage_client.bucket(bucket_name)
         blob = bucket.blob(blob_name)
         blob.download_to_filename(destination_file_name)
-        return f"Blob '{blob_name}' downloaded to '{destination_file_name}'."
+        return f" Blob '{blob_name}' downloaded to '{destination_file_name}'."
     except exceptions.NotFound:
-        return f"Error: Bucket '{bucket_name}' or blob '{blob_name}' not found."
+        return f" Error: Bucket '{bucket_name}' or blob '{blob_name}' not found."
     except Exception as e:
-        return f"An unexpected error occurred: {e}"
+        return f" Unexpected error: {e}"
 
 # ---------------------------------------------------------
-# 8️⃣ Delete file from a bucket
+# 8. Delete file from a bucket
 # ---------------------------------------------------------
 @mcp.tool
 def delete_blob(bucket_name: str, blob_name: str) -> str:
@@ -133,19 +140,19 @@ def delete_blob(bucket_name: str, blob_name: str) -> str:
         bucket = storage_client.bucket(bucket_name)
         blob = bucket.blob(blob_name)
         blob.delete()
-        return f"Blob '{blob_name}' deleted from bucket '{bucket_name}'."
+        return f" Blob '{blob_name}' deleted from bucket '{bucket_name}'."
     except exceptions.NotFound:
-        return f"Error: Bucket '{bucket_name}' or blob '{blob_name}' not found."
+        return f" Error: Bucket '{bucket_name}' or blob '{blob_name}' not found."
     except exceptions.Forbidden as e:
-        return f"Error: Permission denied. Details: {e}"
+        return f" Permission denied. Details: {e}"
     except Exception as e:
-        return f"An unexpected error occurred: {e}"
+        return f" Unexpected error: {e}"
 
 # ---------------------------------------------------------
-# 9️⃣ Get bucket metadata
+# 9. Get bucket metadata
 # ---------------------------------------------------------
 @mcp.tool
-def get_bucket_metadata(bucket_name: str) -> dict:
+def get_bucket_metadata(bucket_name: str) -> Dict[str, Any]:
     """Retrieves metadata for a GCS bucket."""
     try:
         storage_client = storage.Client()
@@ -160,22 +167,22 @@ def get_bucket_metadata(bucket_name: str) -> dict:
             "versioning_enabled": bucket.versioning_enabled,
         }
     except exceptions.NotFound:
-        return {"error": f"Bucket '{bucket_name}' not found."}
+        return {"error": f" Bucket '{bucket_name}' not found."}
     except Exception as e:
-        return {"error": f"An unexpected error occurred: {e}"}
+        return {"error": f" Unexpected error: {e}"}
 
 # ---------------------------------------------------------
-# 🔟 Get object metadata
+# 10. Get object metadata
 # ---------------------------------------------------------
 @mcp.tool
-def get_blob_metadata(bucket_name: str, blob_name: str) -> dict:
-    """Retrieves metadata for a specific object in a bucket."""
+def get_blob_metadata(bucket_name: str, blob_name: str) -> Dict[str, Any]:
+    """Retrieves metadata for a specific blob."""
     try:
         storage_client = storage.Client()
         bucket = storage_client.bucket(bucket_name)
         blob = bucket.get_blob(blob_name)
         if not blob:
-            return {"error": f"Blob '{blob_name}' not found in bucket '{bucket_name}'."}
+            return {"error": f" Blob '{blob_name}' not found in '{bucket_name}'."}
         return {
             "name": blob.name,
             "bucket": blob.bucket.name,
@@ -187,108 +194,68 @@ def get_blob_metadata(bucket_name: str, blob_name: str) -> dict:
             "md5_hash": blob.md5_hash,
         }
     except exceptions.NotFound:
-        return {"error": f"Bucket '{bucket_name}' not found."}
+        return {"error": f" Bucket '{bucket_name}' not found."}
     except Exception as e:
-        return {"error": f"An unexpected error occurred: {e}"}
+        return {"error": f" Unexpected error: {e}"}
+
 
 # ---------------------------------------------------------
-# 11️⃣ Generate signed URL
-# ---------------------------------------------------------
-@mcp.tool
-def generate_signed_url(bucket_name: str, blob_name: str, expiration_minutes: int = 15) -> str:
-    """Generates a signed URL for temporary access to a blob"""
-    try:
-        storage_client = storage.Client()
-        bucket = storage_client.bucket(bucket_name)
-        blob = bucket.blob(blob_name)
-        
-        if not blob.exists():
-             return f"Error: Blob '{blob_name}' not found in bucket '{bucket_name}'."
-
-        url = blob.generate_signed_url(expiration=timedelta(minutes=expiration_minutes))
-        return url
-    except exceptions.NotFound:
-        return f"Error: Bucket '{bucket_name}' not found."
-    except Exception as e:
-        return f"An unexpected error occurred: {e}"
-
-# ---------------------------------------------------------
-# 12️⃣ Rename or move an object
+# 11. Rename or move an object
 # ---------------------------------------------------------
 @mcp.tool
 def rename_blob(bucket_name: str, blob_name: str, new_name: str) -> str:
-    """Renames a blob (object) within a GCS bucket."""
+    """Renames a blob in a bucket."""
     try:
         storage_client = storage.Client()
         bucket = storage_client.bucket(bucket_name)
         blob = bucket.blob(blob_name)
         if not blob.exists():
-            return f"Error: Source blob '{blob_name}' not found."
+            return f"  Blob '{blob_name}' not found."
         new_blob = bucket.rename_blob(blob, new_name)
-        return f"Blob '{blob_name}' renamed to '{new_blob.name}' in bucket '{bucket_name}'."
-    except exceptions.NotFound:
-        return f"Error: Bucket '{bucket_name}' or blob '{blob_name}' not found."
+        return f" Blob renamed from '{blob_name}' → '{new_blob.name}'."
     except Exception as e:
-        return f"An unexpected error occurred: {e}"
+        return f" Unexpected error: {e}"
 
 # ---------------------------------------------------------
-# 13️⃣ Copy object to another bucket
+# 12. Copy blob to another bucket
 # ---------------------------------------------------------
 @mcp.tool
 def copy_blob(source_bucket_name: str, blob_name: str, destination_bucket_name: str, destination_blob_name: str) -> str:
-    """Copies an object from one GCS bucket to another."""
+    """Copies an object from one bucket to another."""
     try:
         storage_client = storage.Client()
         source_bucket = storage_client.bucket(source_bucket_name)
         destination_bucket = storage_client.bucket(destination_bucket_name)
         blob = source_bucket.blob(blob_name)
         if not blob.exists():
-            return f"Error: Source blob '{blob_name}' not found in bucket '{source_bucket_name}'."
+            return f"Source blob '{blob_name}' not found."
         source_bucket.copy_blob(blob, destination_bucket, destination_blob_name)
-        return f"Blob '{blob_name}' copied to '{destination_blob_name}' in bucket '{destination_bucket_name}'."
-    except exceptions.NotFound:
-        return f"Error: Source or destination bucket not found."
+        return f" Blob  '{blob_name}' copied → '{destination_blob_name}' in '{destination_bucket_name}'."
     except Exception as e:
-        return f"An unexpected error occurred: {e}"
+        return f"  Unexpected error: {e}"
 
 # ---------------------------------------------------------
-# 14️⃣ Set CORS configuration for a bucket
+# 13. Set CORS configuration
 # ---------------------------------------------------------
 @mcp.tool
-def set_bucket_cors(bucket_name: str, cors_rules: list[dict]) -> str:
-    """Sets the CORS configuration for a bucket.
-
-    Args:
-        bucket_name: The name of the bucket.
-        cors_rules: A list of dictionaries, where each dictionary represents a CORS rule.
-                    Example: [
-                        {
-                            "origin": ["http://example.com"],
-                            "method": ["GET", "POST"],
-                            "response_header": ["Content-Type"],
-                            "max_age_seconds": 3600
-                        }
-                    ]
-    """
+def set_bucket_cors(bucket_name: str, cors_rules: List[Dict[str, Any]]) -> str:
+    """Sets the CORS configuration for a bucket."""
     try:
         storage_client = storage.Client()
         bucket = storage_client.get_bucket(bucket_name)
         bucket.cors = cors_rules
         bucket.patch()
-        return f"CORS configuration updated for bucket '{bucket_name}'."
-    except exceptions.NotFound:
-        return f"Error: Bucket '{bucket_name}' not found."
+        return f" CORS config updated for '{bucket_name}'."
     except Exception as e:
-        return f"An unexpected error occurred: {e}"
+        return f" Unexpected error: {e}"
 
 # ---------------------------------------------------------
-# 15️⃣ Health Check
+# 14. Health Check
 # ---------------------------------------------------------
 @mcp.tool
 def health_check() -> str:
-    """Returns a simple health check message."""
-    return "Server is up and running!"
-
+    """Health check endpoint."""
+    return " Server is up and running!"
 
 # ---------------------------------------------------------
 # 🚀 Entry Point
