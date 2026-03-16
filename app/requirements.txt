@@ -1,3 +1,3 @@
-fastmcp
+mcp[cli]
 google-cloud-storage
 uvicorn
