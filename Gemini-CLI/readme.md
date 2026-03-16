@@ -15,7 +15,7 @@ pasted my settings.json file
 
 #gemini
 
-Prompt: Create a bucket with the name "mano-bucket"
+Prompt: Create a bucket with the name "mano_bucket_24"
 
 note: When prompted, click “Yes, allow once.
 
