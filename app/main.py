@@ -288,3 +288,18 @@ def set_bucket_cors(bucket_name: str, cors_rules: list[dict]) -> str:
 def health_check() -> str:
     """Returns a simple health check message."""
     return "Server is up and running!"
+
+
+# ---------------------------------------------------------
+# 🚀 Entry Point
+# ---------------------------------------------------------
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8080))
+    logger.info(f"🚀 Starting Enhanced GCS MCP Server on port {port}")
+    asyncio.run(
+        mcp.run_async(
+            transport="http",
+            host="0.0.0.0",
+            port=port,
+        )
+    )

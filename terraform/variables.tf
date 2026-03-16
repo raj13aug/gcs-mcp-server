@@ -14,5 +14,5 @@ variable "cloudrun_ingress" {
 }
 
 variable "cloudrun_image" {
-  default = "us-docker.pkg.dev/cloudrun/container/hello"
+  default = "raj13aug/my-app:1.0"
 }
